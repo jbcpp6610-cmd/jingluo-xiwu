@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>鲸落汐屋 · 短篇视觉小说</title>
+<style>
+  html,body{margin:0;height:100%;background:#070d17;overflow:hidden;
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;color:#16233f}
+  #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  /* 设计基准 1600x900，按窗口缩放 */
+  #stage{position:absolute;top:50%;left:50%;width:1600px;height:900px;
+    transform-origin:50% 50%;transform:translate(-50%,-50%) scale(1);
+    overflow:hidden;background:#06101f;box-shadow:0 30px 90px rgba(0,0,0,.65)}
+  .bg,.sp{position:absolute;inset:0;background-repeat:no-repeat;
+    background-position:center center;background-size:cover;
+    transition:opacity .55s ease;opacity:0}
+  /* 立绘站位：按 B4 实图，台阶在画面左侧 26% 处；底边对齐对话框下沿 */
+  .sp{background-size:contain;background-position:center bottom;
+    left:26%;width:46%;height:80%;top:auto;bottom:44px;transform:translateX(-50%)}
+  #vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 45%,rgba(4,9,18,.55) 100%)}
+  /* 对话框 */
+  #box{position:absolute;left:96px;right:96px;bottom:44px;height:238px;box-sizing:border-box;
+    padding:30px 46px 24px;background:#F7F2EB;
+    border:1px solid #a9bed7;border-left:6px solid #081F5C;
+    box-shadow:0 14px 40px rgba(3,10,22,.45);opacity:0;transition:opacity .3s;z-index:4}
+  #box.on{opacity:1}
+  #nm{position:absolute;top:-24px;left:34px;padding:2px 20px 3px;
+    background:#081F5C;color:#F7F2EB;font-size:24px;letter-spacing:.16em;
+    font-family:"Songti SC",SimSun,serif;box-shadow:0 3px 10px rgba(3,10,22,.3)}
+  #nm.hide{display:none}
+  #tx{font-family:"Songti SC","Source Han Serif SC",SimSun,serif;
+    font-size:31px;line-height:1.72;letter-spacing:.035em;color:#16233f;
+    height:100%;overflow:hidden;white-space:pre-wrap}
+  #tx.nar{color:#46587a;font-size:29px}
+  #hint{position:absolute;right:34px;bottom:16px;color:#334EAC;font-size:20px;opacity:0}
+  #hint.on{opacity:.85;animation:blink 1.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.9;transform:translateY(3px)}}
+  /* 选项 */
+  #chs{position:absolute;inset:0;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:22px;z-index:3;
+    background:linear-gradient(180deg,rgba(6,16,31,.15),rgba(6,16,31,.62))}
+  #chs.on{display:flex}
+  #chs button{width:820px;padding:24px 30px;cursor:pointer;text-align:left;
+    font-family:"Songti SC",SimSun,serif;font-size:27px;line-height:1.5;letter-spacing:.03em;
+    color:#0d1f45;background:#F7F2EB;border:1px solid #8aa6c8;border-left:5px solid #334EAC;
+    box-shadow:0 8px 24px rgba(3,10,22,.35);transition:transform .15s,background .2s,border-color .2s}
+  #chs button:hover{background:#eaf1fa;border-left-color:#081F5C;transform:translateX(6px)}
+  #chs button span{color:#7d90b0;font-size:19px;letter-spacing:.1em;margin-right:16px}
+  /* HUD */
+  #hud{position:absolute;top:24px;right:28px;display:flex;gap:10px;z-index:5;
+    transition:opacity .35s}
+  #hud button{padding:7px 16px;cursor:pointer;font-size:15px;letter-spacing:.12em;
+    color:#dbe6f4;background:rgba(8,20,38,.55);border:1px solid rgba(150,180,220,.45);
+    font-family:inherit;transition:background .2s}
+  #hud button:hover{background:rgba(51,78,172,.75)}
+  #hud button.act{background:#334EAC;border-color:#7096D1}
+  /* 标题页 */
+  #title{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;
+    align-items:flex-start;justify-content:center;text-align:left;padding-left:150px;
+    background:radial-gradient(ellipse at 62% 40%,#20365c 0%,#0a1424 62%,#050b14 100%);
+    transition:opacity .5s}
+  #title.hide{opacity:0;pointer-events:none}
+  #title .titleArt{position:absolute;left:auto;right:1%;bottom:-3%;height:96%;transform:none;
+    opacity:.62;pointer-events:none;filter:saturate(.92) brightness(.98);
+    -webkit-mask-image:linear-gradient(180deg,#000 58%,rgba(0,0,0,0) 97%);
+    mask-image:linear-gradient(180deg,#000 58%,rgba(0,0,0,0) 97%)}
+  #title .scrim{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(90deg,rgba(5,11,20,.88) 0%,rgba(5,11,20,.66) 40%,rgba(5,11,20,.05) 68%,rgba(5,11,20,0) 100%)}
+  #title h1{position:relative;margin:0;font-family:"Songti SC",SimSun,serif;font-weight:400;
+    font-size:104px;letter-spacing:.26em;color:#eaf2fb;
+    text-shadow:0 0 40px rgba(112,150,209,.45);padding-left:.26em}
+  #title .sub{margin:26px 0 0;font-size:19px;letter-spacing:.42em;
+    color:#8fb0d8;padding-left:.42em}
+  #title .en{margin:14px 0 46px;font-size:12px;letter-spacing:.5em;color:#5a7ba6;padding-left:.5em}
+  #title .btns{display:flex;gap:18px}
+  #title button,#end button{padding:15px 46px;cursor:pointer;font-size:19px;letter-spacing:.24em;
+    font-family:inherit;color:#eaf2fb;background:rgba(120,152,196,.10);
+    border:1px solid rgba(150,180,220,.5);transition:background .2s,border-color .2s}
+  #title button:hover,#end button:hover{background:rgba(51,78,172,.55);border-color:#93b4dd}
+  #title button:disabled{opacity:.3;cursor:default}
+  #title button:disabled:hover{background:transparent}
+  #title .unlock{margin-top:40px;font-size:13px;letter-spacing:.22em;color:#8aa8cc}
+  #title .tip{margin-top:12px;font-size:12px;letter-spacing:.14em;color:#7794b8}
+  /* 结局页 */
+  #end{position:absolute;inset:0;z-index:9;display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:0 180px;
+    background:linear-gradient(180deg,rgba(4,9,18,.90) 0%,rgba(4,9,18,.70) 42%,rgba(4,9,18,.92) 100%);
+    transition:opacity .5s;opacity:0}
+  #end.on{display:flex;opacity:1}
+  #endTag{font-size:13px;letter-spacing:.5em;color:#8fb2dd;padding-left:.5em;
+    text-shadow:0 2px 14px rgba(4,9,18,.95)}
+  #end h2{margin:20px 0 0;font-family:"Songti SC",SimSun,serif;font-weight:400;
+    font-size:64px;letter-spacing:.18em;color:#f2f7fd;padding-left:.18em;
+    text-shadow:0 4px 26px rgba(4,9,18,.95),0 1px 3px rgba(4,9,18,.9)}
+  #end p{margin:34px 0 0;max-width:1080px;font-family:"Songti SC",SimSun,serif;
+    font-size:24px;line-height:2;color:#d3e0ef;letter-spacing:.04em;
+    text-shadow:0 2px 18px rgba(4,9,18,.95),0 1px 2px rgba(4,9,18,.9)}
+  #end .btns{margin-top:56px;display:flex;gap:18px}
+  /* 提示 */
+  #toast{position:absolute;left:50%;bottom:320px;transform:translateX(-50%);
+    padding:9px 26px;background:rgba(8,31,92,.88);color:#eaf2fb;font-size:15px;
+    letter-spacing:.16em;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10}
+  #toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div class="bg" id="bg0"></div>
+    <div class="bg" id="bg1"></div>
+    <div class="sp" id="sp0"></div>
+    <div class="sp" id="sp1"></div>
+    <div id="vignette"></div>
+    <div id="box">
+      <div id="nm" class="hide"></div>
+      <div id="tx"></div>
+      <div id="hint">▼</div>
+    </div>
+    <div id="chs"></div>
+    <div id="hud">
+      <button data-act="voice" id="btnVoice">语音</button>
+      <button data-act="mute" id="btnMute">音乐</button>
+      <button data-act="auto" id="btnAuto">自动</button>
+      <button data-act="save">存档</button>
+      <button data-act="load">读档</button>
+      <button data-act="title">标题</button>
+    </div>
+    <div id="toast"></div>
+    <div id="title">
+      <img class="titleArt" src="./assets/L1.png" alt="" onerror="this.style.display='none'">
+      <div class="scrim"></div>
+      <h1>鲸落汐屋</h1>
+      <div class="sub">蓝色鲸鱼娘女仆 · 三夜</div>
+      <div class="en">A SHORT VISUAL NOVEL</div>
+      <div class="btns">
+        <button data-act="start">开 始</button>
+        <button data-act="continue" id="btnCont" disabled>继 续</button>
+      </div>
+      <div class="unlock" id="unlock">结局收集 0 / 4</div>
+      <div class="tip">点击画面或按空格推进 · 数字键选择选项</div>
+    </div>
+    <div id="end">
+      <div id="endTag"></div>
+      <h2 id="endTitle"></h2>
+      <p id="endBody"></p>
+      <div class="btns">
+        <button data-act="restart">从头再来</button>
+        <button data-act="title">返回标题</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 剧本数据（改这里就能改剧情，不用碰引擎） ============ -->
+<script type="application/json" id="story">
+{
+ "start": "s1",
+ "nodes": {
+  "s1": {"bg":"B1","sp":null,"lines":[
+    ["","十月的雾把街灯泡成一团牛奶。我把最后一批碗装进纸箱，门上的铃铛响了——不是被风吹的，是有重量地、慢慢地响了一声。"]
+  ],"next":"s1b"},
+
+  "s1b": {"bg":"B4","sp":null,"lines":[
+    ["","门外没有人。只有一小片湿，从门槛漫到我脚下。灯下多了一条影子：蓝的，很长，裙摆后面垂着一条尾巴。"],
+    ["涟","……打扰了。"],
+    ["","她低头，头顶两个小孔冒出一缕白雾。"],
+    ["涟","我是来应征女仆的。"],
+    ["我","应征？"],
+    ["涟","门口的纸。我看见了。"],
+    ["","她举起一张被雨泡软的招工纸，是我三个月前贴的、忘了撕：「招店员，包吃住」。"],
+    ["我","那是我外婆贴的。她已经不在了。"],
+    ["涟","……嗯。"],
+    ["","她停了很久，久到我以为她要走。"],
+    ["涟","那，主人。"],
+    ["我","谁是你主人。"],
+    ["涟","纸上写「包吃住」。吃到、住到，就是主人了。……呜，是这样算的吗。"]
+  ],"next":"c1"},
+
+  "c1": {"lines":[],"choices":[
+    {"k":"A","t":"「进来吧。外面潮，你好像不太喜欢干。」","to":"s2a","set":{"trust":1}},
+    {"k":"B","t":"「我不需要女仆。」","to":"s2b"}
+  ]},
+
+  "s2a": {"bg":"B2","sp":"L1","lines":[
+    ["我","进来吧。外面潮气重，你……好像不太喜欢干。"],
+    ["","她看着自己的手背，那里有一层正在发白的细纹。"],
+    ["涟","主人很会看。"],
+    ["","她进门时尾鳍在门槛上轻轻一拍，屋里立刻有了海的味。"],
+    ["我","先喝碗汤。店里只有这个。"],
+    ["涟","我没有牙。……所以我只喝汤。这是很方便的主人。"],
+    ["我","这算夸我？"],
+    ["涟","算的。"],
+    ["","汤喝完，她把碗端去洗，又回来，从围裙口袋里掏出一枚纽扣放在桌上——一小块磨得很圆的骨头。"],
+    ["涟","那么，我说明服务项目。第一，汤。第二，打扫。第三，唱歌。"],
+    ["我","唱歌？"],
+    ["涟","鲸歌。听的人会睡得很好。"],
+    ["我","……你到底是什么。"],
+    ["涟","海洋生物。"],
+    ["","她想了想。"],
+    ["涟","女仆型的。"],
+    ["涟","主人，我说明一下时限。我能留三个晚上。第三次涨潮的时候，我得回去。"],
+    ["我","回哪儿。"],
+    ["涟","回我该在的地方。在那之前，我要听主人说完一句话。"],
+    ["我","什么话。"],
+    ["涟","主人还没说完的那句。我不知道是哪句。那是女仆的工作。"],
+    ["","她把纽扣收回口袋。那晚她洗了所有的碗，把纸箱一只只搬回架子上，连外婆写的价目表都用袖子擦干净了。"],
+    ["","她洗碗不出声，只有尾鳍隔一会儿拍一下地砖。"]
+  ],"next":"s3"},
+
+  "s2b": {"bg":"B4","sp":null,"lines":[
+    ["我","我不需要女仆。"],
+    ["涟","……明白了。"],
+    ["","她没有走。她坐在门口的石阶上，尾巴垂下去，一直坐到天亮。"],
+    ["","早上开门，台阶是干的——她把自己坐过的那块水擦掉了。"]
+  ],"next":"s3"},
+
+  "s3": {"bg":"B3","sp":"L2","lines":[
+    ["","第二天早上，店里多了一锅汤。汤是咸的。非常咸。"],
+    ["我","涟，你放了多少盐。"],
+    ["涟","一捧。"],
+    ["","她张开手。"],
+    ["涟","海是这么大的。"],
+    ["我","……海不能吃。"],
+    ["涟","……我明白了。是我错了。"],
+    ["","很长的沉默，她头顶喷出一小股雾。她把汤端走，在厨房站了很久。后来我才知道，她一个人把汤兑淡，喝完了。"],
+    ["","那天她擦了三遍柜台，把外婆的照片摆正，又在照片前放了一小碟磷虾干。"],
+    ["我","那是什么。"],
+    ["涟","给她的。鲸落之后，骨头会变成礁石。人死了，是不是也会变成什么。"],
+    ["我","……不知道。"],
+    ["涟","那我把虾放在这儿，等她变成礁石的时候吃。"]
+  ],"next":"s4"},
+
+  "s4": {"bg":"B4","sp":"L5","lines":[
+    ["","夜里她坐在门口，尾巴垂在台阶下拍着石阶。海在很远的地方响。"],
+    ["涟","主人，要听歌吗。"]
+  ],"choices":[
+    {"k":"A","t":"「唱吧。」","to":"s4a","req":{"trust":1},"fail":"s4q"},
+    {"k":"B","t":"「你为什么来这儿。」","to":"s4b","req":{"trust":1},"fail":"s4q"},
+    {"k":"C","t":"「别唱了。我不喜欢鲸。」","to":"s4c"}
+  ]},
+
+  "s4a": {"bg":"B4","sp":"L5","set":{"knows":1},"mood":"song","lines":[
+    ["我","唱吧。"],
+    ["","她闭眼。第一声不在耳朵里响，在胸口——像有什么很大的东西在水下翻了个身。"],
+    ["","我看见外婆坐在柜台后面数硬币；看见她把「今日休」的牌子翻过来又翻回去；看见我站在病房门口，说「知道了」。"]
+  ],"next":"s4a_cut"},
+
+  "s4a_cut": {"bg":"B4","sp":"L5","mood":"hush","lines":[
+    ["","歌到一半，她停了。"],
+    ["涟","……对不起。我唱得太久了。"],
+    ["我","怎么了。"],
+    ["涟","这首歌我只会唱到第三次涨潮，之后就不能唱了。……我说漏了。"],
+    ["我","第三次，然后呢。"],
+    ["涟","然后我回去，把主人的那句话带下去。带到很深的地方，变成鲸落的一部分。"]
+  ],"next":"s4a_b6"},
+
+  "s4a_b6": {"bg":"B6","sp":null,"lines":[
+    ["","在那句话里，我看见了那个地方——没有光，只有骨头一根一根拱起来，像一座沉在海底的教堂。"],
+    ["","骨头中间有很细的雪在落。那是她长大的地方。"]
+  ],"next":"s4a_c"},
+
+  "s4a_c": {"bg":"B4","sp":"L5","lines":[
+    ["我","如果我不说呢。"],
+    ["涟","……那我就留在这里。"],
+    ["","她的尾鳍停住了。"],
+    ["涟","留在岸上的鲸，会忘记自己是谁。"]
+  ],"next":"s5"},
+
+  "s4b": {"bg":"B4","sp":"L5","set":{"knows":1},"lines":[
+    ["我","你为什么来这儿。"],
+    ["涟","因为主人在招工。"],
+    ["","她顿了顿。"],
+    ["涟","……不。因为主人在等。"],
+    ["我","等什么。"],
+    ["涟","等一句话说完。"],
+    ["","她说，海面下三百米有一头鲸的骨头。她在那片骨头旁边长大，那片海里每个孩子都要上岸一次，去服务一个还没说完告别的人。"],
+    ["涟","我们把那句话听完，带走，沉下去。这样那个人就能往前走了。"],
+    ["我","那你呢。"],
+    ["涟","我带走它，契约就完成了。"],
+    ["我","完成之后呢。"],
+    ["涟","……之后就自由了。"],
+    ["我","自由之后去哪。"],
+    ["涟","我不知道。没有人问过我这个。"]
+  ],"next":"s5"},
+
+  "s4c": {"bg":"B4","sp":"L5","lines":[
+    ["我","别唱了。我不喜欢鲸。"],
+    ["涟","……明白了。是我失礼了。"],
+    ["","她安静很久，站起来，把围裙解开，叠成很小的一块。"],
+    ["","那晚她没有回屋。第二天早上，台阶上只剩一枚鲸骨纽扣。"]
+  ],"next":"e4"},
+
+  "s4q": {"bg":"B4","sp":"L5","lines":[
+    ["我","……唱吧。"],
+    ["","她唱了。很短，唱到一半就收了。"],
+    ["我","怎么不唱了。"],
+    ["涟","主人不需要听完整的。……这样就可以了。"],
+    ["","她把围裙的边角抚平，没有再说别的。"]
+  ],"next":"s5"},
+
+  "s5": {"bg":"B5","sp":"L6","lines":[
+    ["","第三夜，潮水涨到街口。灯忽明忽暗，水从门缝下面渗进来，薄薄一层。"],
+    ["","她跪在地上擦那块水，擦得很慢。围裙口袋里，纽扣在发亮。"],
+    ["涟","主人。今天是最后一晚。"],
+    ["我","我知道。"],
+    ["涟","主人从第一晚就知道。所以主人才一直不说。"],
+    ["","我没回答。锅里的汤已经凉了。"],
+    ["涟","没关系。如果我留在这里，我也不会怪主人。只是我会慢慢忘记——忘记怎么端汤，忘记主人的名字，最后忘记自己是来听一句话的。"],
+    ["我","那你为什么还笑。"],
+    ["涟","因为我在服务。"],
+    ["","她把凉掉的汤重新端到我面前。"],
+    ["涟","……主人，请。"]
+  ],"choices":[
+    {"k":"A","t":"「我不走了。你也别走。」","to":"e1","req":{"trust":1,"knows":1},"fail":"e4b"},
+    {"k":"B","t":"「我留下。店照开。你回去吧。」","to":"e2"},
+    {"k":"C","t":"「我月底就走。店要关了。」","to":"e3"}
+  ]},
+
+  "e1": {"bg":"B7","sp":"L1","lines":[
+    ["我","我不走了。"],
+    ["","她抬头，眼里的光像一整片海被搅动。"],
+    ["我","店我继续开，租约我去谈，城里的工作明天辞掉。外婆那句「你留着」，我一直只答了「知道了」——今天答完。"],
+    ["涟","……请说。"],
+    ["我","我想留下。"],
+    ["","桌上的纽扣「啪」地裂成两半。她低头看了很久。"],
+    ["涟","契约完成了。"],
+    ["我","所以你要走。"],
+    ["涟","……契约写的是「听完」。没写要走。"],
+    ["","她把两半纽扣推到我手边，声音很轻，很慢。"],
+    ["涟","主人，我想留下来。……可以吗。"]
+  ],"end":{"tag":"TRUE END 01","title":"涨潮时的歌","body":"我去谈租约，辞掉城里的工作。汐屋重新开门，菜单最下面加了一行「鲸落汤（不咸）」。\n涟留下，但每年深冬要回深海睡一季，店门口挂「过冬歇业」。开春她回来，尾鳍先推门，铃铛响两声。\n——她不是被留下的。是她自己选的。"}},
+
+  "e2": {"bg":"B4","sp":"L5","lines":[
+    ["我","我留下。店照开。你回去吧。"],
+    ["涟","……好的。"],
+    ["","她站直，行了一个很标准的礼，围裙上的鲸尾歪了一下。"],
+    ["我","路上小心。"],
+    ["涟","主人。我把那句话带下去了。是「我留下」。很重，很好听。"],
+    ["","她走进水里时没有回头。尾鳍在水面打开，像一把很慢的扇子。"]
+  ],"end":{"tag":"GOOD END 02","title":"汐屋的第七日","body":"我留下，店照开。她回海。\n每年涨潮最盛的那一夜，门口会有水声——她不进来，只要一碗汤，坐在台阶上喝完。所以那一天我歇业。\n——告别学会了，但没有断。"}},
+
+  "e3": {"bg":"B4","sp":null,"lines":[
+    ["我","我月底就走。店要关了。"],
+    ["涟","……嗯。"],
+    ["","她点头，很慢，像要把这个动作做完整。"],
+    ["涟","那我把话带走了。"],
+    ["我","什么话。"],
+    ["涟","主人刚才说的那句。"],
+    ["","她笑了一下。"],
+    ["涟","虽然不是主人心里想的那句。但也能带走。"],
+    ["","她走的时候，把门口的招牌翻到「营业中」那一面。"]
+  ],"end":{"tag":"NORMAL END 03","title":"深海的回信","body":"我把店还给房东，回城上班。\n第三年冬天，我在海边捡到一只贝壳，贴在耳边有很低的歌，唱到一半就停了。\n——那句话她带走了，只是不是我真正想说的那句。"}},
+
+  "e4": {"bg":"B8","sp":null,"lines":[],"end":{"tag":"BAD END 04","title":"空围裙","body":"她没能完成契约。第三夜早上，汐屋门口只剩叠好的围裙、一枚裂开的鲸骨纽扣和一地海水。\n多年后我在城里，某天在电视里听到鲸歌，忽然想不起自己在等谁。\n——留在岸上的鲸，会忘记自己是谁。"}},
+
+  "e4b": {"bg":"B5","sp":"L6","lines":[
+    ["我","我不走了。店我继续开。"],
+    ["","她看着我，很久。她没有笑。"],
+    ["涟","……主人不知道我是什么，也不知道「留下」要付什么。"],
+    ["涟","这样的话，我听不完。"],
+    ["","她把那枚纽扣放回我手里。纽扣没有裂。"],
+    ["","第三夜结束的时候，门口只剩叠好的围裙，和一地正在干的海水。"]
+  ],"end":{"tag":"BAD END 04","title":"空围裙","body":"她没能完成契约。第三夜早上，汐屋门口只剩叠好的围裙、一枚裂开的鲸骨纽扣和一地海水。\n多年后我在城里，某天在电视里听到鲸歌，忽然想不起自己在等谁。\n——留在岸上的鲸，会忘记自己是谁。"}}
+ }
+}
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- 素材表：真图到位后，把 null 换成 './assets/B4.webp' 即可 ---------- */
+  var ASSETS = {
+    B1:"./assets/B1.webp", B2:"./assets/B2.webp", B3:"./assets/B3.webp", B4:"./assets/B4.webp", B5:"./assets/B5.webp", B6:"./assets/B6.webp", B7:"./assets/B7.webp", B8:"./assets/B8.webp",
+    L1:"./assets/L1.png", L2:"./assets/L2.png", L3:null, L4:null, L5:"./assets/L5.png", L6:"./assets/L6.png"
+  };
+  /* ============ 音乐：Web Audio 实时合成，不依赖任何音频文件 ============
+     一拍一个音的程序化配乐：钟片 + 和声垫 + 鲸歌低频。
+     场景切换时换调式与密度，不是切歌，是同一片海换个天气。 */
+  var AUDIO = (function(){
+    var ctx = null, master = null, rev = null, dry = null;
+    var whale = null, whaleGain = null, pads = [];
+    var timer = null, next = 0, step = 0, ready = false, hushing = false;
+    var muted = (function(){ try { return localStorage.getItem("jingluo_mute") === "1"; } catch (e) { return false; } })();
+    var want = "title", cur = "title";
+
+    var SC = { min:[0,3,5,7,10], maj:[0,2,4,7,9], sus:[0,2,5,7,10] };
+    /* pad 用半音绝对偏移，踩在根音上 */
+    var M = {
+      title :{root:220.00, sc:"min", bpm:50, vel:.085, pad:[0,3,7],      whale:0,
+              pat:[0,null,4,null,2,null,null,null,3,null,1,null,null,4,null,null]},
+      room  :{root:246.94, sc:"min", bpm:56, vel:.075, pad:[0,3,7,10],   whale:0,
+              pat:[0,null,2,4,null,3,null,1,null,null,4,2,null,null,3,null]},
+      shore :{root:196.00, sc:"min", bpm:48, vel:.078, pad:[0,7,10],     whale:1,
+              pat:[0,null,null,4,null,2,null,null,null,3,null,null,1,null,null,null]},
+      tide  :{root:174.61, sc:"sus", bpm:42, vel:.085, pad:[0,5,7],      whale:1,
+              pat:[0,null,null,null,3,null,null,null,4,null,null,null,2,null,null,null]},
+      deep  :{root:130.81, sc:"sus", bpm:40, vel:.050, pad:[0,7,12],     whale:1,
+              pat:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]},
+      ending:{root:261.63, sc:"maj", bpm:54, vel:.080, pad:[0,4,7,9],    whale:0,
+              pat:[0,null,2,null,4,null,null,2,null,3,null,null,1,4,null,null]},
+      empty :{root:130.81, sc:"min", bpm:40, vel:.050, pad:[0,7],        whale:1,
+              pat:[null,null,null,null,null,null,null,null,0,null,null,null,null,null,null,null]},
+      /* 鲸歌：只留一条会滑音的领唱线，钟片全停 */
+      song  :{root:196.00, sc:"min", bpm:44, vel:.000, pad:[0,7,12],     whale:0, call:1, fade:1.6,
+              pat:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]},
+      /* 她停下来那一刻：世界先静一秒，再慢慢回来 */
+      hush  :{root:196.00, sc:"min", bpm:40, vel:.000, pad:[0,7],        whale:0, fade:0.35,
+              pat:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]}
+    };
+
+    function ir(sec, decay){
+      var len = Math.floor(ctx.sampleRate * sec);
+      var buf = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (var c = 0; c < 2; c++) {
+        var d = buf.getChannelData(c);
+        for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+      return buf;
+    }
+
+    function init(){
+      if (ready) return;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try { ctx = new AC(); } catch (e) { return; }
+      master = ctx.createGain(); master.gain.value = muted ? 0 : 0.38;
+      master.connect(ctx.destination);
+      rev = ctx.createConvolver(); rev.buffer = ir(2.8, 3.4);
+      var wet = ctx.createGain(); wet.gain.value = 0.55; rev.connect(wet); wet.connect(master);
+      dry = ctx.createGain(); dry.gain.value = 0.80; dry.connect(master);
+
+      whale = ctx.createOscillator(); whale.type = "sine"; whale.frequency.value = 62;
+      whaleGain = ctx.createGain(); whaleGain.gain.value = 0;
+      var lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+      lfo.frequency.value = 0.07; lfoG.gain.value = 3.4;
+      lfo.connect(lfoG); lfoG.connect(whale.frequency); lfo.start();
+      whale.connect(whaleGain); whaleGain.connect(rev); whaleGain.connect(dry);
+      whale.start();
+
+      ready = true; next = ctx.currentTime + 0.12; step = 0;
+      buildPad(M[want]);
+      whaleGain.gain.setTargetAtTime(M[want].whale ? 0.055 : 0, ctx.currentTime, 1.2);
+      timer = setInterval(tick, 180);
+      updateBtn();
+    }
+
+    function buildPad(m){
+      var now = ctx.currentTime;
+      m.pad.forEach(function(semi, i){
+        var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+        o.type = (i % 2) ? "triangle" : "sine";
+        o.frequency.value = (m.root / 2) * Math.pow(2, semi / 12);
+        lp.type = "lowpass"; lp.frequency.value = 760; lp.Q.value = 0.5;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.032, now + 4.5);
+        o.connect(lp); lp.connect(g); g.connect(dry); g.connect(rev);
+        o.start(now);
+        pads.push({ o: o, g: g });
+      });
+    }
+
+    function bell(deg, t, m){
+      var semi = SC[m.sc][deg % 5] + 12 * Math.floor(deg / 5);
+      var f = m.root * Math.pow(2, semi / 12);
+      var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+      o.type = "triangle"; o.frequency.value = f;
+      lp.type = "lowpass"; lp.frequency.value = 2400;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(m.vel, t + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0006, t + 2.8);
+      o.connect(lp); lp.connect(g); g.connect(dry); g.connect(rev);
+      o.start(t); o.stop(t + 3.0);
+    }
+
+    function bass(t, m){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = m.root / 4;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.075, t + 1.2);
+      g.gain.exponentialRampToValueAtTime(0.0006, t + 6.5);
+      o.connect(g); g.connect(dry); g.connect(rev);
+      o.start(t); o.stop(t + 6.8);
+    }
+
+    /* 鲸歌本体的一个长句：起音低、往上滑一个五度、再落回来，带慢颤音 */
+    function call(t, m){
+      var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+      var f0 = m.root * 2;
+      o.type = "sine";
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(f0 * 1.5, t + 1.5);
+      o.frequency.exponentialRampToValueAtTime(f0 * 1.12, t + 3.4);
+      var lfo = ctx.createOscillator(), lg = ctx.createGain();
+      lfo.frequency.value = 5.2; lg.gain.value = 3.0;
+      lfo.connect(lg); lg.connect(o.frequency);
+      lfo.start(t); lfo.stop(t + 4.2);
+      lp.type = "lowpass"; lp.frequency.value = 1500;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.10, t + 0.9);
+      g.gain.linearRampToValueAtTime(0.055, t + 2.4);
+      g.gain.linearRampToValueAtTime(0.0001, t + 4.0);
+      o.connect(lp); lp.connect(g); g.connect(dry); g.connect(rev);
+      o.start(t); o.stop(t + 4.2);
+    }
+
+    /* 她停下那一拍：整套声音先掐掉，一秒半后房间音慢慢回来 */
+    function hushCut(){
+      var now = ctx.currentTime;
+      hushing = true;
+      master.gain.cancelScheduledValues(now);
+      master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), now);
+      master.gain.exponentialRampToValueAtTime(0.0005, now + 0.18);
+      setTimeout(function(){
+        if (!ready || !ctx) return;
+        var t = ctx.currentTime;
+        master.gain.cancelScheduledValues(t);
+        master.gain.setValueAtTime(0.0005, t);
+        master.gain.linearRampToValueAtTime(muted ? 0.0005 : 0.38, t + 2.4);
+        hushing = false;
+      }, 1500);
+    }
+
+    function tick(){
+      if (!ready || !ctx || ctx.state !== "running") return;
+      var m = M[cur], stepDur = 60 / m.bpm / 2;
+      while (next < ctx.currentTime + 0.9) {
+        var i = step % 16, d = m.pat[i];
+        if (d !== null && d !== undefined) bell(d, next, m);
+        if (m.call && i % 8 === 0) call(next, m);
+        if (i === 0) bass(next, m);
+        step++; next += stepDur;
+      }
+    }
+
+    function setMood(name){
+      want = M[name] ? name : "room";
+      if (!ready) { cur = want; return; }
+      cur = want;
+      var m = M[cur], now = ctx.currentTime;
+      var rel = m.fade || 2.2;
+      pads.forEach(function(p){
+        p.g.gain.cancelScheduledValues(now);
+        p.g.gain.setValueAtTime(Math.max(p.g.gain.value, 0.0001), now);
+        p.g.gain.exponentialRampToValueAtTime(0.0001, now + rel);
+        try { p.o.stop(now + rel + 0.4); } catch (e) {}
+      });
+      pads = [];
+      buildPad(m);
+      whaleGain.gain.setTargetAtTime(m.whale ? 0.055 : 0, now, rel / 2);
+      if (cur === "hush") hushCut();
+    }
+
+    function toggle(){
+      if (!ready) init();
+      if (!ready) return;
+      muted = !muted;
+      master.gain.setTargetAtTime(muted ? 0 : 0.38, ctx.currentTime, 0.25);
+      try { localStorage.setItem("jingluo_mute", muted ? "1" : "0"); } catch (e) {}
+      updateBtn();
+      return muted;
+    }
+
+    function updateBtn(){
+      var b = document.getElementById("btnMute");
+      if (b) { b.textContent = muted ? "静音" : "音乐"; b.className = muted ? "" : "act"; }
+    }
+
+    function ensure(){
+      init();
+      if (ctx && ctx.state === "suspended") { try { ctx.resume(); } catch (e) {} }
+    }
+
+    document.addEventListener("visibilitychange", function(){
+      if (!ready) return;
+      if (document.hidden) { try { ctx.suspend(); } catch (e) {} }
+      else { try { ctx.resume(); } catch (e) {} }
+    });
+
+    /* 人声进来时把配乐压下去，别抢 */
+    function duck(on){
+      if (!ready || hushing) return;
+      var t = ctx.currentTime;
+      master.gain.setTargetAtTime(muted ? 0 : (on ? 0.16 : 0.38), t, 0.12);
+    }
+
+    return { ensure: ensure, setMood: setMood, toggle: toggle, duck: duck, isMuted: function(){ return muted; },
+             debug: function(){ return { ready: ready, state: ctx && ctx.state, mood: cur, stepped: step, pads: pads.length, gain: master && +master.gain.value.toFixed(4) }; } };
+  })();
+  AUDIO && document.getElementById("btnMute") && (function(){
+    var b = document.getElementById("btnMute");
+    b.textContent = AUDIO.isMuted() ? "静音" : "音乐";
+    b.className = AUDIO.isMuted() ? "" : "act";
+  })();
+
+  var MOOD_BY_BG = { B1:"shore", B2:"room", B3:"room", B4:"shore", B5:"tide", B6:"deep", B7:"ending", B8:"empty" };
+
+  var STORY = JSON.parse(document.getElementById("story").textContent);
+  var N = STORY.nodes;
+
+  /* ============ 人声：按台词编号挂文件，缺文件就安静跳过 ============
+     约定：assets/voice/01.wav … 54.wav，编号 = 涟的第几句台词（按剧本顺序） */
+  var VOICE = (function(){
+    var el = new Audio();
+    var on = (function(){ try { return localStorage.getItem("jingluo_voice") !== "0"; } catch (e) { return true; } })();
+    var missing = {}, cur = null, played = 0;
+    var order = {}, n = 0;
+    Object.keys(N).forEach(function(id){
+      (N[id].lines || []).forEach(function(l, i){
+        if (l[0] === "涟") { n++; order[id + ":" + i] = n; }
+      });
+    });
+    el.addEventListener("ended", function(){ AUDIO.duck(false); });
+    el.addEventListener("error", function(){ if (cur) missing[cur] = 1; AUDIO.duck(false); });
+
+    function pad(k){ return (k < 10 ? "0" : "") + k; }
+    function play(nodeId, li){
+      if (!on) return;
+      var k = order[nodeId + ":" + li];
+      if (!k) return;
+      var name = pad(k);
+      if (missing[name]) return;
+      try { el.pause(); el.currentTime = 0; } catch (e) {}
+      cur = name;
+      el.src = "assets/voice/" + name + ".wav";
+      var p = el.play();
+      if (p && p.catch) p.catch(function(){});
+      AUDIO.duck(true);
+      played++;
+    }
+    function stop(){
+      try { el.pause(); el.currentTime = 0; } catch (e) {}
+      AUDIO.duck(false);
+    }
+    function toggle(){
+      on = !on;
+      if (!on) stop();
+      try { localStorage.setItem("jingluo_voice", on ? "1" : "0"); } catch (e) {}
+      var b = document.getElementById("btnVoice");
+      if (b) { b.textContent = on ? "语音" : "静读"; b.className = on ? "act" : ""; }
+      return on;
+    }
+    return { play: play, stop: stop, toggle: toggle, isOn: function(){ return on; },
+             debug: function(){ return { on: on, src: (el.currentSrc || "").split("/").pop(), t: +el.currentTime.toFixed(2),
+                                         muted: el.muted, err: el.error && el.error.code, played: played, n: n }; } };
+  })();
+  (function(){
+    var b = document.getElementById("btnVoice");
+    if (b) { b.textContent = VOICE.isOn() ? "语音" : "静读"; b.className = VOICE.isOn() ? "act" : ""; }
+  })();
+
+  var S = { node:null, li:0, flags:{}, typing:false, auto:false, timer:null, started:false };
+  var SAVE_KEY = "jingluo_save_v1", END_KEY = "jingluo_ends_v1";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var bgEls = [$("bg0"), $("bg1")], spEls = [$("sp0"), $("sp1")];
+  var bgi = 0, spi = 0, curBg = null, curSp = null;
+
+  /* ---------- 占位美术（无外链、无 404，真图一换就消失） ---------- */
+  function ph(id){
+    var isBg = id.charAt(0) === "B";
+    var w = isBg ? 1600 : 900, h = isBg ? 900 : 1200;
+    var dark = ["B1","B2","B4","B5","B6","B8"].indexOf(id) >= 0;
+    var c1 = dark ? "#16305a" : "#e2eaf3";
+    var c2 = dark ? "#050c17" : "#b9cbe0";
+    var ink = dark ? "#7ea3d2" : "#4a6488";
+    var svg;
+    if (isBg) {
+      svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
+        + '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">'
+        + '<stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/>'
+        + '</linearGradient></defs>'
+        + '<rect width="' + w + '" height="' + h + '" fill="url(#g)"/>'
+        + '<path d="M0 620 Q 200 596 400 620 T 800 620 T 1200 620 T 1600 620" fill="none" stroke="' + ink + '" stroke-width="1.4" opacity=".35"/>'
+        + '<path d="M0 664 Q 200 640 400 664 T 800 664 T 1200 664 T 1600 664" fill="none" stroke="' + ink + '" stroke-width="1" opacity=".22"/>'
+        + '<rect x="40" y="40" width="' + (w-80) + '" height="' + (h-80) + '" fill="none" stroke="' + ink + '" stroke-width="1" stroke-dasharray="6 10" opacity=".28"/>'
+        + '<text x="' + (w/2) + '" y="' + (h/2) + '" fill="' + ink + '" font-family="serif" font-size="46" letter-spacing="10" text-anchor="middle" opacity=".62">' + id + ' · 占位背景</text>'
+        + '<text x="' + (w/2) + '" y="' + (h/2 + 58) + '" fill="' + ink + '" font-family="sans-serif" font-size="20" letter-spacing="6" text-anchor="middle" opacity=".38">REPLACE WITH ' + id + '.webp</text>'
+        + '</svg>';
+    } else {
+      svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
+        + '<g opacity=".30" fill="#7096D1">'
+        + '<ellipse cx="450" cy="300" rx="132" ry="152"/>'
+        + '<path d="M450 430 C 322 470 292 720 300 1080 L 600 1080 C 608 720 578 470 450 430 Z"/>'
+        + '<path d="M120 1090 C 300 1060 600 1060 780 1090 C 700 1130 200 1130 120 1090 Z"/>'
+        + '</g>'
+        + '<rect x="20" y="20" width="' + (w-40) + '" height="' + (h-40) + '" fill="none" stroke="#7096D1" stroke-width="1.2" stroke-dasharray="8 12" opacity=".35"/>'
+        + '<text x="' + (w/2) + '" y="1160" fill="#5a7ba6" font-family="sans-serif" font-size="26" letter-spacing="8" text-anchor="middle" opacity=".8">' + id + '</text>'
+        + '</svg>';
+    }
+    return 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg) + '")';
+  }
+  function art(id){ return ASSETS[id] ? 'url("' + ASSETS[id] + '")' : ph(id); }
+
+  /* 素材缺失时自动退回占位图，不至于开天窗 */
+  function validateAssets(){
+    Object.keys(ASSETS).forEach(function(id){
+      var url = ASSETS[id];
+      if (!url) return;
+      var probe = new Image();
+      probe.onerror = function(){
+        ASSETS[id] = null;
+        if (curBg === id) { curBg = null; setBg(id); }
+        if (curSp === id) { curSp = null; setSp(id); }
+        showToast("素材缺失：" + id + "，已回退占位图");
+      };
+      probe.src = url;
+    });
+  }
+
+  /* ---------- 画面层 ---------- */
+  function setBg(id){
+    if (!id || id === curBg) return;
+    curBg = id;
+    AUDIO.setMood(MOOD_BY_BG[id] || "room");
+    var next = bgEls[bgi], prev = bgEls[1 - bgi];
+    next.style.backgroundImage = art(id);
+    next.style.opacity = "1";
+    prev.style.opacity = "0";
+    bgi = 1 - bgi;
+  }
+  function setSp(id){
+    if (id === curSp) return;
+    curSp = id;
+    var next = spEls[spi], prev = spEls[1 - spi];
+    if (!id) { next.style.opacity = "0"; prev.style.opacity = "0"; spi = 1 - spi; return; }
+    next.style.backgroundImage = art(id);
+    next.style.opacity = "1";
+    prev.style.opacity = "0";
+    spi = 1 - spi;
+  }
+
+  /* ---------- 打字机 ---------- */
+  function type(text, cls){
+    var tx = $("tx");
+    tx.className = cls || "";
+    tx.textContent = "";
+    $("hint").className = "";
+    S.typing = true;
+    var i = 0;
+    clearInterval(S.timer);
+    S.timer = setInterval(function(){
+      i += 1;
+      tx.textContent = text.slice(0, i);
+      if (i >= text.length) {
+        clearInterval(S.timer);
+        S.typing = false;
+        $("hint").className = "on";
+      }
+    }, 22);
+  }
+  function finishTyping(text, cls){
+    clearInterval(S.timer);
+    $("tx").textContent = text;
+    $("tx").className = cls || "";
+    S.typing = false;
+    $("hint").className = "on";
+  }
+
+  /* ---------- 节点推进 ---------- */
+  function applySet(obj){
+    if (!obj) return;
+    for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) S.flags[k] = obj[k];
+  }
+  function pass(req){
+    if (!req) return true;
+    for (var k in req) if (S.flags[k] !== req[k]) return false;
+    return true;
+  }
+  function go(id){
+    var node = N[id];
+    if (!node) { showToast("缺失节点 " + id); return; }
+    S.node = id; S.li = 0;
+    $("box").className = "on";
+    $("chs").className = "";
+    applySet(node.set);
+    if (node.bg) setBg(node.bg);
+    if (node.mood) AUDIO.setMood(node.mood);
+    if (Object.prototype.hasOwnProperty.call(node, "sp")) setSp(node.sp);
+    if (!node.lines || node.lines.length === 0) {
+      /* 选项节点不擦掉上一句，玩家要能看见自己正在回应什么 */
+      if (!$("tx").textContent) $("box").className = "";
+      if (node.choices) return showChoices(node);
+      if (node.end) return showEnd(node.end);
+      return;
+    }
+    renderLine();
+  }
+  function renderLine(){
+    var node = N[S.node], ln = node.lines[S.li];
+    var who = ln[0], text = ln[1];
+    if (who) { $("nm").className = ""; $("nm").textContent = who; }
+    else { $("nm").className = "hide"; $("nm").textContent = ""; }
+    type(text, who ? "" : "nar");
+    if (who === "涟") VOICE.play(S.node, S.li); else VOICE.stop();
+  }
+  function advance(){
+    if (!S.started || $("title").className.indexOf("hide") < 0) return;
+    if ($("chs").className === "on") return;
+    if ($("end").className === "on") return;
+    if (S.typing) {
+      var node = N[S.node], ln = node.lines[S.li];
+      finishTyping(ln[1], ln[0] ? "" : "nar");
+      return;
+    }
+    var cur = N[S.node];
+    S.li += 1;
+    if (S.li < cur.lines.length) return renderLine();
+    if (cur.choices) return showChoices(cur);
+    if (cur.end) return showEnd(cur.end);
+    if (cur.next) return go(cur.next);
+  }
+  function showChoices(node){
+    var box = $("chs");
+    box.innerHTML = "";
+    node.choices.forEach(function(c, idx){
+      var b = document.createElement("button");
+      var key = c.k || ("0" + (idx + 1));
+      b.innerHTML = '<span>' + key + '</span>' + c.t;
+      b.onclick = function(ev){
+        ev.stopPropagation();
+        var to = pass(c.req) ? c.to : c.fail;
+        box.className = "";
+        applySet(c.set);
+        go(to);
+      };
+      box.appendChild(b);
+    });
+    box.className = "on";
+    $("hint").className = "";
+  }
+  function showEnd(e){
+    $("box").className = "";
+    $("endTag").textContent = e.tag;
+    $("endTitle").textContent = e.title;
+    $("endBody").innerText = e.body;
+    $("end").className = "on";
+    hud(false);
+    VOICE.stop();
+    AUDIO.setMood("ending");
+    var got = loadEnds();
+    if (got.indexOf(e.tag) < 0) { got.push(e.tag); saveEnds(got); }
+    $("unlock").textContent = "结局收集 " + got.length + " / 4";
+    try { localStorage.removeItem(SAVE_KEY); } catch(err){}
+    $("btnCont").disabled = true;
+  }
+
+  /* ---------- 存档 ---------- */
+  function save(){
+    if (!S.started || !S.node) return;
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ node:S.node, li:S.li, flags:S.flags }));
+      showToast("已存档");
+    } catch(err){ showToast("存档失败：浏览器拒绝了本地存储"); }
+  }
+  function load(){
+    var raw = null;
+    try { raw = localStorage.getItem(SAVE_KEY); } catch(err){}
+    if (!raw) { showToast("没有存档"); return; }
+    var d;
+    try { d = JSON.parse(raw); } catch(err){ showToast("存档损坏"); return; }
+    hideTitle();
+    S.flags = d.flags || {};
+    S.node = d.node; S.li = Math.max(0, d.li || 0);
+    var node = N[S.node];
+    $("end").className = "";
+    $("chs").className = "";
+    $("box").className = "on";
+    applySet(node.set);
+    if (node.bg) setBg(node.bg);
+    if (node.mood) AUDIO.setMood(node.mood);
+    if (Object.prototype.hasOwnProperty.call(node, "sp")) setSp(node.sp);
+    if (!node.lines || !node.lines[S.li]) S.li = 0;
+    renderLine();
+    showToast("已读档");
+  }
+  function hasSave(){
+    try { return !!localStorage.getItem(SAVE_KEY); } catch(err){ return false; }
+  }
+  function loadEnds(){
+    try { var a = JSON.parse(localStorage.getItem(END_KEY) || "[]"); return Array.isArray(a) ? a : []; }
+    catch(err){ return []; }
+  }
+  function saveEnds(a){ try { localStorage.setItem(END_KEY, JSON.stringify(a)); } catch(err){} }
+
+  /* ---------- 杂项 ---------- */
+  var toastTimer;
+  function showToast(msg){
+    var t = $("toast");
+    t.textContent = msg; t.className = "on";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.className = ""; }, 1400);
+  }
+  function hud(v){
+    var h = $("hud");
+    h.style.opacity = v ? "1" : "0";
+    h.style.pointerEvents = v ? "auto" : "none";
+  }
+  function hideTitle(){
+    $("title").className = "hide";
+    S.started = true;
+    $("box").className = "on";
+  }
+  function startGame(){
+    hideTitle();
+    hud(true);
+    AUDIO.ensure();
+    S.flags = {}; curBg = null; curSp = null;
+    $("end").className = "";
+    go(STORY.start);
+  }
+  function toTitle(){
+    S.started = false;
+    hud(false);
+    VOICE.stop();
+    AUDIO.setMood("title");
+    $("title").className = "";
+    $("box").className = "";
+    $("chs").className = "";
+    $("end").className = "";
+    $("btnCont").disabled = !hasSave();
+    var got = loadEnds();
+    $("unlock").textContent = "结局收集 " + got.length + " / 4";
+  }
+
+  /* ---------- 缩放 ---------- */
+  function fit(){
+    var s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    $("stage").style.transform = "translate(-50%,-50%) scale(" + s + ")";
+  }
+  window.addEventListener("resize", fit);
+
+  /* ---------- 事件 ---------- */
+  document.getElementById("stage").addEventListener("click", function(ev){
+    AUDIO.ensure();
+    if (ev.target.closest("#hud") || ev.target.closest("#title") || ev.target.closest("#end") || ev.target.closest("#chs")) return;
+    advance();
+  });
+  document.addEventListener("keydown", function(ev){
+    if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); advance(); }
+    if (ev.key === "s" || ev.key === "S") save();
+    if (ev.key === "l" || ev.key === "L") load();
+    if (/^[1-9]$/.test(ev.key)) {
+      var btns = document.querySelectorAll("#chs button");
+      var i = parseInt(ev.key, 10) - 1;
+      if (btns[i]) btns[i].click();
+    }
+  });
+  document.body.addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-act]");
+    if (!b) return;
+    var act = b.getAttribute("data-act");
+    AUDIO.ensure();
+    if (act === "voice") {
+      var von = VOICE.toggle();
+      showToast(von ? "人声已开启" : "已切到静读");
+      return;
+    }
+    if (act === "mute") {
+      var m = AUDIO.toggle();
+      showToast(m ? "已静音" : "音乐已开启");
+      return;
+    }
+    if (act === "start" || act === "restart") { $("end").className = ""; startGame(); }
+    if (act === "continue") load();
+    if (act === "save") save();
+    if (act === "load") load();
+    if (act === "title") toTitle();
+    if (act === "auto") {
+      S.auto = !S.auto;
+      $("btnAuto").className = S.auto ? "act" : "";
+      if (S.auto) autoLoop();
+    }
+  });
+  function autoLoop(){
+    if (!S.auto) return;
+    setTimeout(function(){
+      if (!S.auto) return;
+      var chs = $("chs").className === "on", end = $("end").className === "on";
+      if (!chs && !end && S.started) advance();
+      autoLoop();
+    }, 2100);
+  }
+
+  fit();
+  validateAssets();
+  /* 开发钩子：#play 跳过标题直接开始；#node:s5 直达某节点并预设满条件 */
+  if (location.hash) {
+    var dbg = document.createElement("style");
+    dbg.textContent = "*{transition:none!important;animation:none!important}";
+    document.head.appendChild(dbg);
+  }
+  if (location.hash === "#play") startGame();
+  if (location.hash.indexOf("#node:") === 0) {
+    hideTitle();
+    $("title").style.display = "none";
+    S.flags = { trust:1, knows:1 };
+    go(location.hash.slice(6));
+  }
+  $("btnCont").disabled = !hasSave();
+  $("unlock").textContent = "结局收集 " + loadEnds().length + " / 4";
+
+  /* 供离线校验用 */
+  window.__story = STORY;
+  window.__audio = AUDIO.debug;
+  window.__voice = VOICE.debug;
+})();
+</script>
+</body>
+</html>
